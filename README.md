@@ -1,3 +1,9 @@
+```markdown
+# REA Project
+
+```
+README.md
+```README.md
 # REA Project
 REA
 ├── backend
@@ -24,3 +30,139 @@ REA
 ├── .gitignore
 ├── .env.example
 └── README.md
+```
+
+## Running the Project
+
+### To Run the Backend
+
+```bash
+# Navigate to the Next.js directory
+cd /Users/pranav/projects/REA/nextjs
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+### To Run the Frontend
+
+```bash
+# Navigate to the Next.js directory
+cd /Users/pranav/projects/REA/nextjs
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+## Creating a New Environment
+
+If the above steps for running the backend do not work, follow these steps to create a fresh environment.
+
+### 1. Install pyenv (Manage Multiple Python Versions)
+
+```bash
+# Install pyenv using Homebrew
+brew install pyenv
+```
+
+### 2. Install Python 3.11
+
+```bash
+# Install Python version 3.11.6
+pyenv install 3.11.6
+```
+
+### 3. Select Python 3.11.6 Globally or Locally
+
+```bash
+# Set Python 3.11.6 as the global version
+pyenv global 3.11.6
+
+# OR set Python 3.11.6 for the specific project directory
+cd /Users/pranav/projects/REA
+pyenv local 3.11.6
+```
+
+### 4. Verify Python Version
+
+```bash
+# Check the currently active Python version
+python --version
+# Expected output: Python 3.11.6
+```
+
+### 5. Create a Fresh Virtual Environment
+
+#### Remove Any Old Virtual Environment
+
+```bash
+# Navigate to the backend directory
+cd /Users/pranav/projects/REA/backend
+
+# Remove the existing virtual environment
+rm -rf venv
+```
+
+#### Create & Activate a New Virtual Environment
+
+```bash
+# Create a new virtual environment using Python 3.11
+python3.11 -m venv venv
+
+# Activate the virtual environment
+source venv/bin/activate
+```
+
+#### Verify Python Version in Virtual Environment
+
+```bash
+# Check the Python version within the virtual environment
+python --version
+# Expected output: Python 3.11.x
+```
+
+### 6. Install Dependencies
+
+#### Upgrade pip
+
+```bash
+# Upgrade pip to the latest version
+pip install --upgrade pip
+```
+
+#### Install Requirements
+
+If installing `torch` fails, install it first using the CPU-only index URL.
+
+```bash
+# Install torch and related packages
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Install other dependencies from requirements.txt
+pip install -r requirements.txt
+
+# OR install dependencies manually
+pip install fastapi uvicorn requests pymongo faiss-cpu sentence-transformers
+```
+
+> **Important:** By default, `sentence-transformers` requires a compatible `torch` version. Since you’re on Apple Silicon with CPU-only, use the CPU index URL as shown above.
+
+### 7. Run Your FastAPI App
+
+Ensure you are in the `REA/backend/` directory or specify the correct module path if you are in the root folder.
+
+```bash
+# Run Uvicorn server from the backend directory
+uvicorn app:app --host 0.0.0.0 --port 8000
+
+# OR if you're one directory above backend
+uvicorn backend.app:app --host 0.0.0.0 --port 8000
+```
+
+```
