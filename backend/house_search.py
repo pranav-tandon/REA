@@ -65,7 +65,7 @@ schema, validator = from_pydantic(
 
 # === Instantiate the LLM + chain (pointing to local Ollama, for example) ===
 ollama_llm = ChatOpenAI(
-    openai_api_base=os.getenv("OLLAMA_API_BASE", "http://localhost:11411"),
+    openai_api_base=os.getenv("OLLAMA_API_BASE", "http://localhost:11434"),
     openai_api_key="unused",
     model_name=os.getenv("OLLAMA_MODEL_NAME", "llama2"),
     temperature=0
