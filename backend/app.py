@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from house_search import router as house_search_router
 from basic_chat import router as basic_chat_router
 from pydantic import BaseModel
@@ -19,12 +20,23 @@ from neighborhood import get_neighborhood_stats
 load_dotenv()
 
 app = FastAPI()
-app.include_router(house_search_router)
-app.include_router(basic_chat_router)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3001"],  # Next.js default port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers with explicit prefixes
+app.include_router(basic_chat_router, prefix="")  # No prefix for basic_chat
+app.include_router(house_search_router, prefix="")  # No prefix for house_search
 
 # Use environment variables
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-LLM_SERVER_URL = os.getenv("LLM_SERVER_URL", "http://localhost:11411/generate")
+LLM_SERVER_URL = os.getenv("LLM_SERVER_URL", "http://localhost:11434/generate")
 
 # Connect to MongoDB
 client = pymongo.MongoClient(MONGO_URI)
@@ -43,8 +55,8 @@ class ChatRequest(BaseModel):
     user_query: str
 
 @app.get("/")
-def root():
-    return {"message": "REA Backend is running!"}
+def read_root():
+    return {"message": "REA Backend API is running"}
 
 @app.post("/chat")
 def chat_endpoint(request: ChatRequest):
@@ -108,3 +120,7 @@ def neighborhood_info(zip_code: str):
     if not stats:
         return {"error": "No neighborhood stats found"}
     return stats
+
+@app.get("/test")
+async def test_route():
+    return {"message": "API is working"}
