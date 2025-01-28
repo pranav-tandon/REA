@@ -166,3 +166,63 @@ uvicorn backend.app:app --host 0.0.0.0 --port 8000
 ```
 
 ```
+
+
+1. Ignore the Virtual Environment
+Add venv/ or .venv/ to .gitignore:
+gitignore
+Copy
+Edit
+venv/
+.venv/
+Remove venv/ from Git tracking if previously committed:
+bash
+Copy
+Edit
+git rm -r --cached venv
+git commit -m "Remove venv from tracking and update .gitignore"
+This ensures that you’ll never commit large PyTorch libs or any other virtual environment files again.
+
+2. Check for Large Files
+If you previously committed large files (>100 MB) that are still in your Git history, GitHub will keep rejecting your pushes. To remove them:
+
+Install BFG Repo-Cleaner:
+bash
+Copy
+Edit
+brew install bfg
+Remove large files from history:
+bash
+Copy
+Edit
+bfg --delete-files "libtorch_cpu.dylib" .
+Or remove the entire .venv folder from history:
+bash
+Copy
+Edit
+bfg --delete-folders venv .
+Clean and force-push:
+bash
+Copy
+Edit
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push --force
+Note: This rewrites your repo history, so coordinate with any collaborators.
+
+3. Push the Clean Repo
+Now that large files are removed from past commits, and your .venv/ is ignored in future commits:
+
+Add & commit any new changes:
+bash
+Copy
+Edit
+git add .
+git commit -m "My changes"
+Push:
+bash
+Copy
+Edit
+git push origin main
+You shouldn’t see file-size errors anymore.
+

@@ -1,10 +1,13 @@
-
 from fastapi import FastAPI
+from house_search import router as house_search_router
+from basic_chat import router as basic_chat_router
 from pydantic import BaseModel
 import requests
 import pymongo
 import faiss
 import numpy as np
+from dotenv import load_dotenv
+import os
 
 from sentence_transformers import SentenceTransformer
 from typing import List
@@ -12,16 +15,20 @@ from typing import List
 from cma import estimate_value
 from neighborhood import get_neighborhood_stats
 
-app = FastAPI()
+# Load environment variables
+load_dotenv()
 
-# Load environment (optionally use python-dotenv or similar)
-# e.g. MONGO_URI, LLM_SERVER_URL from .env
-MONGO_URI = "mongodb://localhost:27017/"
-LLM_SERVER_URL = "http://localhost:11411/generate"
+app = FastAPI()
+app.include_router(house_search_router)
+app.include_router(basic_chat_router)
+
+# Use environment variables
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+LLM_SERVER_URL = os.getenv("LLM_SERVER_URL", "http://localhost:11411/generate")
 
 # Connect to MongoDB
 client = pymongo.MongoClient(MONGO_URI)
-db = client["real_estate_db"]  # or whichever name
+db = client["real_estate_db"]
 listings_collection = db["listings"]
 
 # Load FAISS index (placeholder - handle if not existing)

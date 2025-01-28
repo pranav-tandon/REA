@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pymongo
 
-def redfin_scraper(search_url: str, mongo_uri: str="mongodb://localhost:27017/"):
+def scrape_redfin(search_url: str, mongo_uri: str="mongodb://localhost:27017/"):
     client = pymongo.MongoClient(mongo_uri)
     db = client["real_estate_db"]
     listings_collection = db["listings"]

@@ -2,9 +2,11 @@
 #  Python-related files
 # -----------------------
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+.Python
+venv/
+.env
 
 # Virtual environment directories
 venv/
@@ -26,8 +28,16 @@ build/
 #  FAISS index files
 # -----------------------
 *.faiss
+*.npy
 
 # -----------------------
 #  macOS junk files
 # -----------------------
 .DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Next.js
+npm-debug.log*

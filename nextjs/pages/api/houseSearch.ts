@@ -1,9 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+/**
+ * Forwards user queries to FastAPI's /house-search endpoint.
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     try {
-      const backendRes = await fetch("http://localhost:8000/chat", {
+      const backendRes = await fetch("http://localhost:8000/house-search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req.body),
