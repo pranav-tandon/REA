@@ -22,3 +22,10 @@ pyzill==1.0.0
 openai==1.59.9
 python-dotenv==1.0.0
 langchain-community>=0.3.0
+
+# Test dependencies
+pytest==8.0.0
+pytest-asyncio==0.23.5
+httpx==0.26.0
+mongomock==4.1.2
+pytest-mock==3.12.0

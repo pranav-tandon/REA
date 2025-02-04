@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from house_search import router as house_search_router
+from flow import router as flow_router
 from pydantic import BaseModel
 import requests
 import pymongo
@@ -31,6 +32,7 @@ app.add_middleware(
 
 # Include only house_search router (now includes chat functionality)
 app.include_router(house_search_router, prefix="")
+app.include_router(flow_router, prefix="")
 
 # Use environment variables
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")

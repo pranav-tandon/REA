@@ -19,14 +19,16 @@ default: help
 # -----------------------------------------------------------------
 .PHONY: backend-venv
 backend-venv:
-	@echo ">>> Removing any old venv in $(BACKEND_DIR)..."
-	rm -rf $(BACKEND_DIR)/$(VENV)
-	@echo ">>> Creating fresh venv in $(BACKEND_DIR)/$(VENV)..."
-	cd $(BACKEND_DIR) && $(PYTHON) -m venv $(VENV)
-	@echo ">>> Activating venv and installing dependencies..."
-	@cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install --upgrade pip
-	@cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install --index-url $(TORCH_INDEX) torch torchvision torchaudio
-	@cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install -r requirements.txt
+	@if [ ! -d "$(BACKEND_DIR)/$(VENV)" ]; then \
+		echo ">>> Creating fresh venv in $(BACKEND_DIR)/$(VENV)..."; \
+		cd $(BACKEND_DIR) && $(PYTHON) -m venv $(VENV); \
+		echo ">>> Activating venv and installing dependencies..."; \
+		cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install --upgrade pip; \
+		cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install --index-url $(TORCH_INDEX) torch torchvision torchaudio; \
+		cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install -r requirements.txt; \
+	else \
+		echo ">>> Using existing venv in $(BACKEND_DIR)/$(VENV)..."; \
+	fi
 
 .PHONY: backend-run
 backend-run: backend-venv
@@ -108,7 +110,7 @@ all: backend-run
 dev: backend-venv frontend-install
 	@echo ">>> Running BOTH backend & frontend concurrently in LOCAL mode. Press Ctrl + C to kill both."
 	( \
-	  trap 'kill $(jobs -p); kill $(lsof -t -i:8000) || true' SIGINT SIGTERM EXIT; \
+	  trap 'kill $(jobs -p); kill $(lsof -t -i:8000) || true' SIGINT SIGTERM; \
 	  cd $(BACKEND_DIR) && source $(VENV)/bin/activate && uvicorn app:app --host 0.0.0.0 --port 8000 & \
 	  cd $(FRONTEND_DIR) && npm run dev \
 	)
@@ -117,7 +119,7 @@ dev: backend-venv frontend-install
 dev-api: backend-venv frontend-install
 	@echo ">>> Running BOTH backend & frontend concurrently in API mode. Press Ctrl + C to kill both."
 	( \
-	  trap 'kill $(jobs -p); kill $(lsof -t -i:8000) || true' SIGINT SIGTERM EXIT; \
+	  trap 'kill $(jobs -p); kill $(lsof -t -i:8000) || true' SIGINT SIGTERM; \
 	  cd $(BACKEND_DIR) && source $(VENV)/bin/activate && MODEL_MODE=api uvicorn app:app --host 0.0.0.0 --port 8000 & \
 	  cd $(FRONTEND_DIR) && npm run dev \
 	)
