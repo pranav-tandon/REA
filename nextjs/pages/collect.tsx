@@ -46,38 +46,41 @@ export default function CollectPage() {
     setError(null);
 
     try {
+      // Create payload with proper type handling for optional fields
+      const payload = {
+        city: city.trim(),
+        state: stateVal.trim(),
+        price: price ? parseFloat(price) : undefined,
+        actionType,
+        bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
+        bathrooms: bathrooms ? parseFloat(bathrooms) : undefined,
+        propertyType,
+        minSquareFeet: minSquareFeet ? parseInt(minSquareFeet) : undefined,
+        maxSquareFeet: maxSquareFeet ? parseInt(maxSquareFeet) : undefined,
+        notes: notes.trim() || undefined,
+        zipCode: zipCode.trim() || undefined,
+        schoolDistrict: schoolDistrict.trim() || undefined,
+        maxCommuteTime: maxCommuteTime ? parseInt(maxCommuteTime) : undefined,
+        yearBuilt: yearBuilt ? parseInt(yearBuilt) : undefined,
+        parkingSpaces: parkingSpaces ? parseInt(parkingSpaces) : undefined,
+        stories: stories ? parseInt(stories) : undefined,
+        basement,
+        lotSize: lotSize.trim() || undefined,
+        kitchenPreferences: kitchenPreferences.trim() || undefined,
+        flooringType: flooringType.trim() || undefined,
+        layoutStyle: layoutStyle || undefined,
+        exteriorMaterial: exteriorMaterial.trim() || undefined,
+        hasPool,
+        outdoorSpace: outdoorSpace.trim() || undefined,
+      };
+
       const res = await fetch("/api/flowProxy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           endpoint: "/flow/collect-constraints",
           method: "POST",
-          payload: {
-            city,
-            state: stateVal,
-            price: parseFloat(price),
-            actionType,
-            bedrooms: parseInt(bedrooms),
-            bathrooms: parseFloat(bathrooms),
-            propertyType,
-            minSquareFeet: minSquareFeet ? parseInt(minSquareFeet) : null,
-            maxSquareFeet: maxSquareFeet ? parseInt(maxSquareFeet) : null,
-            notes,
-            zipCode,
-            schoolDistrict,
-            maxCommuteTime,
-            yearBuilt,
-            parkingSpaces,
-            stories,
-            basement,
-            lotSize,
-            kitchenPreferences,
-            flooringType,
-            layoutStyle,
-            exteriorMaterial,
-            hasPool,
-            outdoorSpace,
-          },
+          payload,
         }),
       });
 
