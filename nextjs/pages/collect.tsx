@@ -15,7 +15,7 @@ export default function CollectPage() {
   const [notes, setNotes] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   // Add new state variables for expanded form
   const [showMore, setShowMore] = useState(false);
@@ -33,7 +33,7 @@ export default function CollectPage() {
   // Interior features
   const [kitchenPreferences, setKitchenPreferences] = useState("");
   const [flooringType, setFlooringType] = useState("");
-  const [layoutStyle, setLayoutStyle] = useState("any");
+  const [layoutStyle, setLayoutStyle] = useState("");
   
   // Exterior features
   const [exteriorMaterial, setExteriorMaterial] = useState("");
@@ -43,7 +43,7 @@ export default function CollectPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
       const res = await fetch("/api/flowProxy", {
@@ -90,9 +90,9 @@ export default function CollectPage() {
       } else {
         throw new Error("No profileId returned");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error collecting constraints:", err);
-      setError(err.message || "Unknown error");
+      setError(typeof err === 'string' ? err : err instanceof Error ? err.message : 'An unexpected error occurred');
     }
     setLoading(false);
   };
@@ -302,7 +302,7 @@ export default function CollectPage() {
                   onChange={(e) => setLayoutStyle(e.target.value)}
                   className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="any">Any</option>
+                  <option value="">Any</option>
                   <option value="open">Open Concept</option>
                   <option value="traditional">Traditional</option>
                 </select>
@@ -338,7 +338,11 @@ export default function CollectPage() {
             </div>
           )}
 
-          {error && <p className="text-red-400">{error}</p>}
+          {error && (
+            <div className="text-red-400 p-3 rounded bg-red-900/50">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
