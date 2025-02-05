@@ -9,13 +9,36 @@ export default function CollectPage() {
   const [actionType, setActionType] = useState("Buy");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
-  const [propertyType, setPropertyType] = useState("House");
+  const [propertyType, setPropertyType] = useState("Any");
   const [minSquareFeet, setMinSquareFeet] = useState("");
   const [maxSquareFeet, setMaxSquareFeet] = useState("");
   const [notes, setNotes] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Add new state variables for expanded form
+  const [showMore, setShowMore] = useState(false);
+  
+  // Additional form fields
+  const [zipCode, setZipCode] = useState("");
+  const [schoolDistrict, setSchoolDistrict] = useState("");
+  const [maxCommuteTime, setMaxCommuteTime] = useState("");
+  const [yearBuilt, setYearBuilt] = useState("");
+  const [parkingSpaces, setParkingSpaces] = useState("");
+  const [stories, setStories] = useState("");
+  const [basement, setBasement] = useState(false);
+  const [lotSize, setLotSize] = useState("");
+  
+  // Interior features
+  const [kitchenPreferences, setKitchenPreferences] = useState("");
+  const [flooringType, setFlooringType] = useState("");
+  const [layoutStyle, setLayoutStyle] = useState("any");
+  
+  // Exterior features
+  const [exteriorMaterial, setExteriorMaterial] = useState("");
+  const [hasPool, setHasPool] = useState(false);
+  const [outdoorSpace, setOutdoorSpace] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +63,20 @@ export default function CollectPage() {
             minSquareFeet: minSquareFeet ? parseInt(minSquareFeet) : null,
             maxSquareFeet: maxSquareFeet ? parseInt(maxSquareFeet) : null,
             notes,
+            zipCode,
+            schoolDistrict,
+            maxCommuteTime,
+            yearBuilt,
+            parkingSpaces,
+            stories,
+            basement,
+            lotSize,
+            kitchenPreferences,
+            flooringType,
+            layoutStyle,
+            exteriorMaterial,
+            hasPool,
+            outdoorSpace,
           },
         }),
       });
@@ -126,6 +163,7 @@ export default function CollectPage() {
               value={propertyType}
               onChange={(e) => setPropertyType(e.target.value)}
             >
+              <option value="Any">Any</option>
               <option value="House">House</option>
               <option value="Apartment">Apartment</option>
               <option value="Condo">Condo</option>
@@ -202,6 +240,103 @@ export default function CollectPage() {
               placeholder="Any specific preferences?"
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowMore(!showMore)}
+            className="w-full text-blue-400 hover:text-blue-300 text-sm py-2"
+          >
+            {showMore ? "Show Less Options ↑" : "Show More Options ↓"}
+          </button>
+
+          {showMore && (
+            <div className="space-y-4 border-t border-gray-700 pt-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Zip Code</label>
+                <input
+                  type="text"
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                  className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="e.g. 12345"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">School District</label>
+                <input
+                  type="text"
+                  value={schoolDistrict}
+                  onChange={(e) => setSchoolDistrict(e.target.value)}
+                  className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Enter preferred school district"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Maximum Commute Time (minutes)</label>
+                <input
+                  type="number"
+                  value={maxCommuteTime}
+                  onChange={(e) => setMaxCommuteTime(e.target.value)}
+                  className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="e.g. 30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Year Built</label>
+                <input
+                  type="number"
+                  value={yearBuilt}
+                  onChange={(e) => setYearBuilt(e.target.value)}
+                  className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="e.g. 2000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Layout Style</label>
+                <select
+                  value={layoutStyle}
+                  onChange={(e) => setLayoutStyle(e.target.value)}
+                  className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="any">Any</option>
+                  <option value="open">Open Concept</option>
+                  <option value="traditional">Traditional</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Basement</label>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={basement}
+                    onChange={(e) => setBasement(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded"
+                  />
+                  <span className="ml-2">Has Basement</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Pool</label>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={hasPool}
+                    onChange={(e) => setHasPool(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded"
+                  />
+                  <span className="ml-2">Has Pool</span>
+                </div>
+              </div>
+
+              {/* Add more optional fields as needed */}
+            </div>
+          )}
 
           {error && <p className="text-red-400">{error}</p>}
 
