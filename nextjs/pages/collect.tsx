@@ -13,14 +13,13 @@ export default function CollectPage() {
   const [minSquareFeet, setMinSquareFeet] = useState("");
   const [maxSquareFeet, setMaxSquareFeet] = useState("");
   const [notes, setNotes] = useState("");
+  const [manualQuery, setManualQuery] = useState(""); // <-- Add this for free-form query input
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Add new state variables for expanded form
-  const [showMore, setShowMore] = useState(false);
-  
   // Additional form fields
+  const [showMore, setShowMore] = useState(false);
   const [zipCode, setZipCode] = useState("");
   const [schoolDistrict, setSchoolDistrict] = useState("");
   const [maxCommuteTime, setMaxCommuteTime] = useState("");
@@ -29,13 +28,9 @@ export default function CollectPage() {
   const [stories, setStories] = useState("");
   const [basement, setBasement] = useState(false);
   const [lotSize, setLotSize] = useState("");
-  
-  // Interior features
   const [kitchenPreferences, setKitchenPreferences] = useState("");
   const [flooringType, setFlooringType] = useState("");
   const [layoutStyle, setLayoutStyle] = useState("");
-  
-  // Exterior features
   const [exteriorMaterial, setExteriorMaterial] = useState("");
   const [hasPool, setHasPool] = useState(false);
   const [outdoorSpace, setOutdoorSpace] = useState("");
@@ -46,8 +41,24 @@ export default function CollectPage() {
     setError(null);
 
     try {
-      // Create payload with proper type handling for optional fields
+      // 1) Construct a single "user_input" for the LLM either from the free-form box
+      //    or from the structured fields if free-form is empty.
+      let constructedPrompt = manualQuery.trim();
+      if (!constructedPrompt) {
+        constructedPrompt = `I want to ${actionType.toLowerCase()} 
+          a ${bedrooms} bedroom${parseInt(bedrooms) > 1 ? "s" : ""}, 
+          ${bathrooms} bath${parseFloat(bathrooms) > 1 ? "s" : ""} 
+          ${propertyType.toLowerCase() === "any" ? "property" : propertyType.toLowerCase()}
+          in ${city}${stateVal ? `, ${stateVal}` : ""} 
+          for about ${price || "(no budget specified)"}. 
+          Additional notes: ${notes || "(none)"}.
+        `;
+      }
+
+      // 2) Create the payload. We'll still send all fields in case you want them stored directly.
       const payload = {
+        user_input: constructedPrompt, // LLM will parse from here
+        // Additional fields to store (beyond the LLM extraction):
         city: city.trim(),
         state: stateVal.trim(),
         price: price ? parseFloat(price) : undefined,
@@ -95,7 +106,13 @@ export default function CollectPage() {
       }
     } catch (err) {
       console.error("Error collecting constraints:", err);
-      setError(typeof err === 'string' ? err : err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(
+        typeof err === "string"
+          ? err
+          : err instanceof Error
+          ? err.message
+          : "An unexpected error occurred"
+      );
     }
     setLoading(false);
   };
@@ -103,8 +120,33 @@ export default function CollectPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-md mx-auto bg-gray-800 rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-6">REA- Home is where the heart is. Find Your Home</h1>
+        <h1 className="text-2xl font-bold mb-6">
+          REA- Home is where the heart is. Find Your Home
+        </h1>
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* ========================
+              1) Free-form Query Textarea
+              ======================== */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Free-form Query (Optional)
+            </label>
+            <textarea
+              className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              value={manualQuery}
+              onChange={(e) => setManualQuery(e.target.value)}
+              placeholder='e.g. "I want to buy a 2 bedroom, 2 bath house in Miami under 500k..."'
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              If you fill out this box, it will override the structured fields
+              below. Otherwise, we’ll build a query from your fields below.
+            </p>
+          </div>
+
+          {/* =========================
+              2) Structured Fields
+              ========================= */}
           <div>
             <label className="block text-sm font-medium mb-1">
               City <span className="text-red-400">*</span>
@@ -147,7 +189,8 @@ export default function CollectPage() {
 
           <div>
             <label className="block text-sm font-medium mb-1">
-              Price {actionType === 'Rent' ? '(Monthly)' : ''} <span className="text-red-400">*</span>
+              Price {actionType === "Rent" ? "(Monthly)" : ""}{" "}
+              <span className="text-red-400">*</span>
             </label>
             <input
               type="number"
@@ -155,7 +198,7 @@ export default function CollectPage() {
               onChange={(e) => setPrice(e.target.value)}
               required
               className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              placeholder={actionType === 'Rent' ? 'e.g. 2000' : 'e.g. 500000'}
+              placeholder={actionType === "Rent" ? "e.g. 2000" : "e.g. 500000"}
             />
           </div>
 
@@ -187,7 +230,7 @@ export default function CollectPage() {
               <option value="">Select bedrooms</option>
               {[1, 2, 3, 4, 5, 6].map((num) => (
                 <option key={num} value={num}>
-                  {num} {num === 1 ? 'bedroom' : 'bedrooms'}
+                  {num} {num === 1 ? "bedroom" : "bedrooms"}
                 </option>
               ))}
               <option value="7">7+ bedrooms</option>
@@ -207,7 +250,7 @@ export default function CollectPage() {
               <option value="">Select bathrooms</option>
               {[1, 1.5, 2, 2.5, 3, 3.5, 4].map((num) => (
                 <option key={num} value={num}>
-                  {num} {num === 1 ? 'bathroom' : 'bathrooms'}
+                  {num} {num === 1 ? "bathroom" : "bathrooms"}
                 </option>
               ))}
               <option value="5">5+ bathrooms</option>
@@ -215,7 +258,9 @@ export default function CollectPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Square Footage (optional)</label>
+            <label className="block text-sm font-medium mb-1">
+              Square Footage (optional)
+            </label>
             <div className="flex space-x-2">
               <input
                 type="number"
@@ -235,7 +280,9 @@ export default function CollectPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+            <label className="block text-sm font-medium mb-1">
+              Notes (optional)
+            </label>
             <textarea
               className="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               value={notes}
@@ -277,7 +324,9 @@ export default function CollectPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Maximum Commute Time (minutes)</label>
+                <label className="block text-sm font-medium mb-1">
+                  Maximum Commute Time (minutes)
+                </label>
                 <input
                   type="number"
                   value={maxCommuteTime}

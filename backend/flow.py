@@ -52,7 +52,7 @@ from sentence_transformers import SentenceTransformer
 from kor import from_pydantic, create_extraction_chain
 
 # Importing chat_llm and models from house_search
-from house_search import HouseRequest, chat_llm, ActionType
+from house_search import HouseRequest, chat_llm, ActionType, extraction_chain
 
 # Import SystemMessage and HumanMessage needed for the LLM call
 from langchain.schema import HumanMessage, SystemMessage
@@ -94,6 +94,10 @@ router = APIRouter()
 # Pydantic Schemas
 # ------------------------------------------------------------------------------
 class CollectConstraintsRequest(BaseModel):
+    user_input: Optional[str] = Field(
+        None, 
+        description="The user's free-form real-estate query input for LLM extraction"
+    )
     city: str = Field(..., description="City name")
     state: str = Field(..., description="State code")
     price: float = Field(..., description="Target price")
@@ -183,40 +187,49 @@ def extract_neighborhoods_with_kor(raw_text: str) -> List[str]:
     return neighborhoods
 
 # ------------------------------------------------------------------------------
-# Route 1: Collect Constraints
+# Route 1: Collect Constraints (Using HouseSearch-style LLM extraction via Kor)
 # ------------------------------------------------------------------------------
 @router.post("/flow/collect-constraints", response_model=CollectConstraintsResponse)
 async def collect_constraints(request: CollectConstraintsRequest):
     """
-    1) Create a new profile with the user's basic constraints:
-       - City, State, Price, ActionType (Buy/Sell), optional notes
-       - Set status='COLLECTED'
-       - Return profileId so front-end can move to next step
+    1) Use the Kor extraction chain (like in /house-search) to parse constraints
+       (city, state, max_price, beds, baths, action) from user_input.
+    2) Store them (and any additional fields) in a profile doc with status='COLLECTED'.
+    3) Return profileId so the front-end can proceed (we skip steps 2 & 3).
     """
-    logger.info("STEP 1: Collect Constraints: city=%s, state=%s, price=%s, action=%s",
-                request.city, request.state, request.price, request.actionType)
+    logger.info("STEP 1: Collect Constraints (via House LLM extraction)")
 
     try:
+        # 1) Invoke the same LLM extraction chain you used in house-search.
+        extraction_result = extraction_chain.invoke(request.user_input)
+        house_req: HouseRequest = extraction_result.get("validated_data")
+
+        if not house_req or not house_req.city:
+            logger.warning("City name was not extracted from user_input.")
+            raise HTTPException(
+                status_code=400,
+                detail="City name is required or was not extracted."
+            )
+        
+        # 2) Build your profile object based on extracted fields + any extras
+        #    from CollectConstraintsRequest.
         profile = {
-            "city": request.city,
-            "state": request.state,
-            "price": request.price,
-            "actionType": request.actionType.lower(),
-            "notes": request.notes,
+            "city": house_req.city,
+            "state": house_req.state,
+            "price": house_req.max_price,              # from house_req
+            "actionType": house_req.action.lower(),    # e.g. "buy" or "rent"
+            "beds": house_req.beds,
+            "baths": house_req.baths,
+            # Optionally store notes from LLM if you have a 'notes' field,
+            # otherwise fall back to request.notes.
+            "notes": getattr(house_req, "notes", None) or request.notes,
+
+            # Optionally store the entire original user_input.
+            "original_user_input": request.user_input,
+
+            # Then store all additional request fields as needed.
             "zipCode": request.zipCode,
-            "schoolDistrict": request.schoolDistrict,
-            "maxCommuteTime": request.maxCommuteTime,
-            "yearBuilt": request.yearBuilt,
-            "parkingSpaces": request.parkingSpaces,
-            "stories": request.stories,
-            "basement": request.basement,
-            "lotSize": request.lotSize,
-            "kitchenPreferences": request.kitchenPreferences,
-            "flooringType": request.flooringType,
-            "layoutStyle": request.layoutStyle,
-            "exteriorMaterial": request.exteriorMaterial,
-            "hasPool": request.hasPool,
-            "outdoorSpace": request.outdoorSpace,
+            # etc... (store other additional fields if required)
             "status": "COLLECTED",
             "createdAt": datetime.datetime.utcnow(),
             "updatedAt": datetime.datetime.utcnow()
@@ -224,12 +237,14 @@ async def collect_constraints(request: CollectConstraintsRequest):
         
         result = profiles_collection.insert_one(profile)
         profile_id = str(result.inserted_id)
+        
         logger.info(f"Created profile with ID: {profile_id}")
         
         return CollectConstraintsResponse(
             profileId=profile_id,
             success=True
         )
+
     except Exception as e:
         logger.error(f"Error in collect_constraints: {str(e)}", exc_info=True)
         raise HTTPException(
