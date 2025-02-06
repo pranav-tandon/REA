@@ -57,6 +57,10 @@ from house_search import HouseRequest, chat_llm, ActionType
 # Import SystemMessage and HumanMessage needed for the LLM call
 from langchain.schema import HumanMessage, SystemMessage
 
+from fastapi import APIRouter, HTTPException
+from rag import get_top_10_with_profile_rag
+from bson import ObjectId
+
 load_dotenv()
 
 # ------------------------------------------------------------------------------
@@ -468,6 +472,23 @@ async def finalize_search(request: FinalizeSearchRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+@router.get("/rag/top10")
+def rag_top10(profile_id: str):
+    """
+    Returns the top 10 listings for the given profile, 
+    factoring in the user's conversation history.
+    """
+    try:
+        # Validate object id
+        if not ObjectId.is_valid(profile_id):
+            raise HTTPException(status_code=400, detail="Invalid profile_id")
+
+        top_10 = get_top_10_with_profile_rag(profile_id)
+        return {"profile_id": profile_id, "top_10": top_10}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ------------------------------------------------------------------------------
 # OPTIONAL: Route 5 (LLM Augmentation)

@@ -19,13 +19,14 @@ default: help
 # -----------------------------------------------------------------
 .PHONY: backend-venv
 backend-venv:
-	@if [ ! -d "$(BACKEND_DIR)/$(VENV)" ]; then \
+	@cd $(BACKEND_DIR) && \
+	if [ ! -d "$(VENV)" ]; then \
 		echo ">>> Creating fresh venv in $(BACKEND_DIR)/$(VENV)..."; \
-		cd $(BACKEND_DIR) && $(PYTHON) -m venv $(VENV); \
+		$(PYTHON) -m venv $(VENV); \
 		echo ">>> Activating venv and installing dependencies..."; \
-		cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install --upgrade pip; \
-		cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install --index-url $(TORCH_INDEX) torch torchvision torchaudio; \
-		cd $(BACKEND_DIR) && source $(VENV)/bin/activate && pip install -r requirements.txt; \
+		source $(VENV)/bin/activate && pip install --upgrade pip; \
+		source $(VENV)/bin/activate && pip install --index-url $(TORCH_INDEX) torch torchvision torchaudio; \
+		source $(VENV)/bin/activate && pip install -r requirements.txt; \
 	else \
 		echo ">>> Using existing venv in $(BACKEND_DIR)/$(VENV)..."; \
 	fi
