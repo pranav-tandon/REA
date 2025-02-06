@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Determine which endpoint to use based on the request type
       const endpoint = req.body.type === "chat" ? "chat" : "house-search";
       
-      const backendRes = await fetch(`http://localhost:8000/${endpoint}`, {
+      const backendRes = await fetch(`http://localhost:8005/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

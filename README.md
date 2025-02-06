@@ -1,10 +1,8 @@
-```markdown
 # REA Project
 
+## Project Structure
+
 ```
-README.md
-```README.md
-# REA Project
 REA
 ├── backend
 │   ├── scrapers
@@ -16,6 +14,8 @@ REA
 │   ├── cma.py
 │   ├── neighborhood.py
 │   ├── requirements.txt
+│   ├── Dockerfile
+│   ├── entrypoint.sh
 │   └── README.md
 ├── nextjs
 │   ├── package.json
@@ -26,7 +26,9 @@ REA
 │   ├── public
 │   ├── tsconfig.json
 │   ├── next.config.js
+│   ├── Dockerfile
 │   └── README.md
+├── docker-compose.yml
 ├── .gitignore
 ├── .env.example
 └── README.md
@@ -34,195 +36,156 @@ REA
 
 ## Running the Project
 
-### To Run the Backend
+### Using Docker (Recommended)
+
+Ensure you have **Docker** and **Docker Compose** installed.
 
 ```bash
-# Navigate to the Next.js directory
-cd /Users/pranav/projects/REA/nextjs
+# Build and start all services (backend, frontend, MongoDB)
+docker-compose up --build
+```
+
+- Backend (FastAPI) runs on `http://localhost:8005`
+- Frontend (Next.js) runs on `http://localhost:3005`
+- MongoDB runs on port `27017`
+
+To stop the services:
+
+```bash
+docker-compose down
+```
+
+---
+
+### Running Without Docker (Bare Metal)
+
+#### Running the Backend
+
+```bash
+# Navigate to the backend directory
+cd backend
+
+# Create a virtual environment and install dependencies
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Run FastAPI server
+uvicorn app:app --host 0.0.0.0 --port 8005
+```
+
+#### Running the Frontend
+
+```bash
+# Navigate to the frontend directory
+cd nextjs
 
 # Install dependencies
 npm install
 
-# Start the development server
-npm run dev
+# Start the Next.js development server
+npm run dev -- -p 3005
 ```
 
-### To Run the Frontend
+## Setting Up a Fresh Environment
+
+If the backend setup does not work, follow these steps:
+
+### 1. Install `pyenv` (Python Version Manager)
 
 ```bash
-# Navigate to the Next.js directory
-cd /Users/pranav/projects/REA/nextjs
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
-
-## Creating a New Environment
-
-If the above steps for running the backend do not work, follow these steps to create a fresh environment.
-
-### 1. Install pyenv (Manage Multiple Python Versions)
-
-```bash
-# Install pyenv using Homebrew
 brew install pyenv
 ```
 
 ### 2. Install Python 3.11
 
 ```bash
-# Install Python version 3.11.6
 pyenv install 3.11.6
 ```
 
-### 3. Select Python 3.11.6 Globally or Locally
+### 3. Set Python Version for the Project
 
 ```bash
-# Set Python 3.11.6 as the global version
-pyenv global 3.11.6
-
-# OR set Python 3.11.6 for the specific project directory
 cd /Users/pranav/projects/REA
 pyenv local 3.11.6
 ```
 
-### 4. Verify Python Version
+### 4. Create & Activate Virtual Environment
 
 ```bash
-# Check the currently active Python version
-python --version
-# Expected output: Python 3.11.6
-```
-
-### 5. Create a Fresh Virtual Environment
-
-#### Remove Any Old Virtual Environment
-
-```bash
-# Navigate to the backend directory
-cd /Users/pranav/projects/REA/backend
-
-# Remove the existing virtual environment
+cd backend
 rm -rf venv
-```
-
-#### Create & Activate a New Virtual Environment
-
-```bash
-# Create a new virtual environment using Python 3.11
 python3.11 -m venv venv
-
-# Activate the virtual environment
 source venv/bin/activate
 ```
 
-#### Verify Python Version in Virtual Environment
+### 5. Install Dependencies
 
 ```bash
-# Check the Python version within the virtual environment
-python --version
-# Expected output: Python 3.11.x
-```
-
-### 6. Install Dependencies
-
-#### Upgrade pip
-
-```bash
-# Upgrade pip to the latest version
 pip install --upgrade pip
-```
-
-#### Install Requirements
-
-If installing `torch` fails, install it first using the CPU-only index URL.
-
-```bash
-# Install torch and related packages
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-
-# Install other dependencies from requirements.txt
 pip install -r requirements.txt
-
-# OR install dependencies manually
-pip install fastapi uvicorn requests pymongo faiss-cpu sentence-transformers
 ```
 
-> **Important:** By default, `sentence-transformers` requires a compatible `torch` version. Since you’re on Apple Silicon with CPU-only, use the CPU index URL as shown above.
-
-### 7. Run Your FastAPI App
-
-Ensure you are in the `REA/backend/` directory or specify the correct module path if you are in the root folder.
+If `torch` installation fails, install it separately:
 
 ```bash
-# Run Uvicorn server from the backend directory
-uvicorn app:app --host 0.0.0.0 --port 8000
-
-# OR if you're one directory above backend
-uvicorn backend.app:app --host 0.0.0.0 --port 8000
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 ```
 
+### 6. Run the Backend
+
+```bash
+uvicorn app:app --host 0.0.0.0 --port 8005
 ```
 
+## Ignore Virtual Environment in Git
 
-1. Ignore the Virtual Environment
-Add venv/ or .venv/ to .gitignore:
-gitignore
-Copy
-Edit
+Add the following to `.gitignore`:
+
+```
 venv/
 .venv/
-Remove venv/ from Git tracking if previously committed:
-bash
-Copy
-Edit
+```
+
+If `venv/` was previously committed:
+
+```bash
 git rm -r --cached venv
 git commit -m "Remove venv from tracking and update .gitignore"
-This ensures that you’ll never commit large PyTorch libs or any other virtual environment files again.
+```
 
-2. Check for Large Files
-If you previously committed large files (>100 MB) that are still in your Git history, GitHub will keep rejecting your pushes. To remove them:
+## Handling Large Files in Git
 
-Install BFG Repo-Cleaner:
-bash
-Copy
-Edit
+If you encounter GitHub push errors due to large files (>100MB), follow these steps:
+
+### 1. Install BFG Repo-Cleaner
+
+```bash
 brew install bfg
-Remove large files from history:
-bash
-Copy
-Edit
+```
+
+### 2. Remove Large Files from Git History
+
+```bash
 bfg --delete-files "libtorch_cpu.dylib" .
-Or remove the entire .venv folder from history:
-bash
-Copy
-Edit
+# OR remove an entire folder
 bfg --delete-folders venv .
-Clean and force-push:
-bash
-Copy
-Edit
+```
+
+### 3. Clean and Force Push
+
+```bash
 git reflog expire --expire=now --all
 git gc --prune=now --aggressive
 git push --force
-Note: This rewrites your repo history, so coordinate with any collaborators.
+```
 
-3. Push the Clean Repo
-Now that large files are removed from past commits, and your .venv/ is ignored in future commits:
+## Pushing Clean Repo
 
-Add & commit any new changes:
-bash
-Copy
-Edit
+After removing large files:
+
+```bash
 git add .
-git commit -m "My changes"
-Push:
-bash
-Copy
-Edit
+git commit -m "Clean repo and remove large files"
 git push origin main
-You shouldn’t see file-size errors anymore.
-
+```

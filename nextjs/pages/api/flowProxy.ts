@@ -6,7 +6,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
  *      POST /flowProxy => { endpoint, method, payload }
  */
 export default async function flowProxy(req: NextApiRequest, res: NextApiResponse) {
-  const backendBase = "http://localhost:8000";  // adjust if needed
+  // Use environment variable for backend URL with fallback
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8005";
 
   if (req.method === "GET") {
     // Example: /flowProxy?endpoint=/flow/confirm&profileId=xxx
@@ -26,16 +27,19 @@ export default async function flowProxy(req: NextApiRequest, res: NextApiRespons
     // Example body: { endpoint: '/flow/collect-constraints', method: 'POST', payload: {...} }
     const { endpoint, method, payload } = req.body;
     const url = `${backendBase}${endpoint}`;
+    console.log(`Attempting to connect to backend at: ${url}`);
     try {
       const backendRes = await fetch(url, {
         method: method || "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload || {})
       });
+      console.log(`Backend responded with status: ${backendRes.status}`);
       const data = await backendRes.json();
       return res.status(backendRes.status).json(data);
     } catch (err) {
       console.error("Error in flowProxy POST:", err);
+      console.error(`Failed to connect to: ${url}`);
       return res.status(500).json({ error: "Failed to fetch from backend" });
     }
   } else {

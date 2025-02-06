@@ -29,7 +29,8 @@ from geopy.geocoders import Nominatim
 import pymongo
 
 # New approach:
-from langchain_ollama import OllamaLLM, ChatOllama
+from langchain_community.llms import Ollama
+from langchain_community.chat_models import ChatOllama
 
 # === Load environment variables ===
 load_dotenv()
@@ -132,7 +133,7 @@ if MODEL_MODE == "local":
             logger.error(f"Error pulling model: {str(pull_err)}")
             raise
 
-        llm = OllamaLLM(
+        llm = Ollama(
             base_url=DEEPSEEK_MODEL_ENDPOINT,
             model=DEEPSEEK_MODEL_NAME,
             temperature=0
