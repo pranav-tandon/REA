@@ -8,7 +8,7 @@ export default async function ragProxy(req: NextApiRequest, res: NextApiResponse
   }
 
   try {
-    const backendUrl = `http://localhost:8000/rag/top10?profile_id=${profileId}`;
+    const backendUrl = `http://localhost:8005/rag/top10?profile_id=${profileId}`;
     const backendRes = await fetch(backendUrl);
     const data = await backendRes.json();
 

@@ -8,8 +8,11 @@ RUN apt-get update && \
     apt-get install -y build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-# Change working directory to /app (not /app/backend)
+# Change working directory to /app
 WORKDIR /app
+
+# Create resources directory with appropriate permissions
+RUN mkdir -p /app/resources && chmod 777 /app/resources
 
 # Copy requirements first for better layer caching
 COPY requirements.txt ./
@@ -23,9 +26,10 @@ RUN python -m venv /venv \
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Copy the rest of the backend code
+# Copy everything except resources directory
 COPY . .
+RUN rm -rf resources
 
 EXPOSE 8005
 
-ENTRYPOINT ["/app/entrypoint.sh"] 
+ENTRYPOINT ["/app/entrypoint.sh"]
