@@ -12,7 +12,7 @@ services:
       - /app/.cache  # Exclude cache directory
     environment:
       - PYTHONUNBUFFERED=1
-      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_URI=mongodb://mongodb:27017/rea
       - OLLAMA_API_BASE=http://host.docker.internal:11434
       - TRANSFORMERS_CACHE=/app/resources/models  # Set specific cache location
     extra_hosts:
@@ -41,6 +41,7 @@ services:
       - /app/.next  # Exclude Next.js build directory
     environment:
       - NEXT_PUBLIC_BACKEND_URL=http://backend:8005
+      - MONGODB_URI=mongodb://mongodb:27017
     deploy:
       resources:
         limits:
@@ -78,6 +79,8 @@ services:
         soft: 64000
         hard: 64000
     restart: always
+    networks:
+      - rea-network
 
 volumes:
   mongodb_data:
