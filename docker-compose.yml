@@ -1,0 +1,91 @@
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./backend:/app
+      - /app/venv  # Exclude venv from volume mounting
+      - backend_resources:/app/resources
+      - /app/.cache  # Exclude cache directory
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MONGODB_URI=mongodb://mongodb:27017/rea
+      - OLLAMA_API_BASE=http://host.docker.internal:11434
+      - TRANSFORMERS_CACHE=/app/resources/models  # Set specific cache location
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mongodb
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '1.0'
+        reservations:
+          memory: 2G
+    networks:
+      - rea-network
+
+  frontend:
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    volumes:
+      - ./nextjs:/app
+      - /app/node_modules  # Exclude node_modules from volume mounting
+      - /app/.next  # Exclude Next.js build directory
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:8005
+      - MONGODB_URI=mongodb://mongodb:27017
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '1.0'
+        reservations:
+          memory: 2G
+    networks:
+      - rea-network
+    depends_on:
+      - backend
+
+  mongodb:
+    image: mongo:latest
+    command: mongod --wiredTigerCacheSizeGB 0.5 --wiredTigerJournalCompressor zlib --logpath /dev/stdout --logappend
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=rea
+      - MONGODB_DATA_DIR=/data/db
+      - MONDODB_LOG_DIR=/dev/stdout
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+    ulimits:
+      memlock: -1
+      nproc: 64000
+      nofile:
+        soft: 64000
+        hard: 64000
+    restart: always
+    networks:
+      - rea-network
+
+volumes:
+  mongodb_data:
+  backend_resources:
+
+networks:
+  rea-network:
+    driver: bridge 

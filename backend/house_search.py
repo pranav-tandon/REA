@@ -29,7 +29,8 @@ from geopy.geocoders import Nominatim
 import pymongo
 
 # New approach:
-from langchain_ollama import OllamaLLM, ChatOllama
+from langchain_community.llms import Ollama
+from langchain_community.chat_models import ChatOllama
 
 # === Load environment variables ===
 load_dotenv()
@@ -40,7 +41,7 @@ DEEPSEEK_MODEL_ENDPOINT = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
 DEEPSEEK_MODEL_NAME = os.getenv("OLLAMA_MODEL_NAME", "deepseek-r1")
 
 # === MongoDB connection (optional) ===
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+MONGO_URI = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/")
 client = pymongo.MongoClient(MONGO_URI)
 db = client["real_estate_db"]
 listings_collection = db["listings"]
@@ -132,7 +133,7 @@ if MODEL_MODE == "local":
             logger.error(f"Error pulling model: {str(pull_err)}")
             raise
 
-        llm = OllamaLLM(
+        llm = Ollama(
             base_url=DEEPSEEK_MODEL_ENDPOINT,
             model=DEEPSEEK_MODEL_NAME,
             temperature=0
@@ -218,9 +219,21 @@ async def house_search(request: SearchRequest):
         # 1) Invoke the Kor extraction chain
         result = extraction_chain.invoke(user_input)
         house_req: HouseRequest = result.get("validated_data")
-        if not house_req or not house_req.city:
-            logger.warning("City name was not extracted from user_input; returning 400.")
-            raise HTTPException(status_code=400, detail="City name is required or was not extracted.")
+        
+        # Enhanced error handling for missing or invalid extraction
+        if not house_req:
+            logger.warning("No valid data extracted from user input")
+            raise HTTPException(
+                status_code=400, 
+                detail="Could not understand the search request. Please include a city name and try to be more specific."
+            )
+            
+        if not house_req.city:
+            logger.warning("City name was not extracted from user_input")
+            raise HTTPException(
+                status_code=400, 
+                detail="Please specify a city name in your search request (e.g., 'Show me houses in Miami')."
+            )
 
         # 2) Check for existing listings (cache)
         query = {
@@ -338,7 +351,10 @@ async def house_search(request: SearchRequest):
         raise
     except Exception as e:
         logger.error(f"Unexpected error in house_search: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="An unexpected error occurred while processing your search request. Please try again with a more specific query."
+        )
 
 
 # === Chat route remains similar ===
