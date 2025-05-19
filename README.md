@@ -1,10 +1,10 @@
 ```markdown
-# REA Project
+
 
 ```
 README.md
 ```README.md
-# REA Project
+# REA (Real Estate Agent) Project
 REA
 ├── backend
 │   ├── scrapers
