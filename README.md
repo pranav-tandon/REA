@@ -1,10 +1,6 @@
-```markdown
-
-
-```
-README.md
+# Real Estate Agent (REA)
 ```README.md
-# REA (Real Estate Agent) Project
+# REA Project
 REA
 ├── backend
 │   ├── scrapers
